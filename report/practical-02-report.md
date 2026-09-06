@@ -19,118 +19,118 @@ The point of this practical was to learn how persistent storage actually works i
 
 I confirmed docker, kind and kubectl versions matched what was needed, deleted any old cluster from Practical 1, made the host folder `/tmp/dso202-p2-storage`, and checked I had enough disk space (about 951G free).
 
-![Tool versions](../screenshot/stage0-step1-versions.png)
-![Host directory created](../screenshot/stage0-step3-hostdir.png)
+![Tool versions](../evidence/stage0-step1-versions.png)
+![Host directory created](../evidence/stage0-step3-hostdir.png)
 
 ### Stage 1: Cluster and Namespace
 
 I created the 3 node cluster with `kind create cluster`, and confirmed the node names came out correctly (control-plane, worker-node-1, worker-node-2) mapped to the docker container names. I applied the namespace, the quota, and the retain StorageClass. Checking `kubectl describe resourcequota` showed all the storage limits I set. I also found the local-path-provisioner pod and its config, which showed it writes to `/var/local-path-provisioner`.
 
-![Cluster created](../screenshot/stage1-step1-cluster-create.png)
+![Cluster created](../evidence/stage1-step1-cluster-create.png)
 
 
-![Nodes confirmed](../screenshot/stage1-step2-nodes.png)
+![Nodes confirmed](../evidence/stage1-step2-nodes.png)
 
 
-![Mount check](../screenshot/stage1-step3-mount-check.png)
+![Mount check](../evidence/stage1-step3-mount-check.png)
 
-![Namespace, quota and StorageClass applied](../screenshot/stage1-step4-apply-namespace-quota-sc.png)
+![Namespace, quota and StorageClass applied](../evidence/stage1-step4-apply-namespace-quota-sc.png)
 
 
-![Quota described](../screenshot/stage1-step5-quota-describe.png)
-![StorageClasses listed](../screenshot/stage1-step6-storageclasses.png)
+![Quota described](../evidence/stage1-step5-quota-describe.png)
+![StorageClasses listed](../evidence/stage1-step6-storageclasses.png)
 
-![Provisioner located](../screenshot/stage1-step7-8-provisioner.png)
+![Provisioner located](../evidence/stage1-step7-8-provisioner.png)
 
 ### Stage 2: Static Provisioning
 
 I made a PersistentVolume by hand pointing at a folder on worker-node-1, then a claim that bound right away since `manual` is not a real StorageClass, just a matching label. I ran a pod that wrote a line into a file on the volume. Deleting the pod and remaking it kept the old lines, proving the volume holds the data, not the pod. Deleting the claim moved the PV to `Released` instead of `Available`. The file was still on the host even after I deleted the PV object completely. Recreating everything gave a file with three lines total, from three different pods.
 
-![PV created](../screenshot/stage2-step1-pv-create.png)
-![PV fields](../screenshot/stage2-step2-pv-fields.png)
-![PVC bound](../screenshot/stage2-step3-pvc-bound.png)
-![No manual StorageClass exists](../screenshot/stage2-step4-manual-notfound.png)
-![Static writer pod running](../screenshot/stage2-step5-pod-static-writer.png)
-![Ledger seen from both container and host](../screenshot/stage2-step6-ledger-both-views.png)
-![Ledger with two lines](../screenshot/stage2-step7-ledger-two-lines.png)
-![PV released after claim deletion](../screenshot/stage2-step8-pv-released.png)
-![Data survives PV deletion](../screenshot/stage2-step9-pv-deleted-data-survives.png)
-![Ledger with three lines](../screenshot/stage2-step10-ledger-three-lines.png)
+![PV created](../evidence/stage2-step1-pv-create.png)
+![PV fields](../evidence/stage2-step2-pv-fields.png)
+![PVC bound](../evidence/stage2-step3-pvc-bound.png)
+![No manual StorageClass exists](../evidence/stage2-step4-manual-notfound.png)
+![Static writer pod running](../evidence/stage2-step5-pod-static-writer.png)
+![Ledger seen from both container and host](../evidence/stage2-step6-ledger-both-views.png)
+![Ledger with two lines](../evidence/stage2-step7-ledger-two-lines.png)
+![PV released after claim deletion](../evidence/stage2-step8-pv-released.png)
+![Data survives PV deletion](../evidence/stage2-step9-pv-deleted-data-survives.png)
+![Ledger with three lines](../evidence/stage2-step10-ledger-three-lines.png)
 
 
 ### Stage 3, Dynamic Provisioning
 
 A claim against `standard` stayed Pending, since that class uses WaitForFirstConsumer. Once a pod used the claim, the volume got created automatically, named after the claim's UID. `df -h` inside the container showed the whole node disk, not just 1Gi, so this provisioner does not enforce requested size. Resizing to 2Gi was rejected since `allowVolumeExpansion` is false. Deleting the pod and claim removed the PV and the node folder completely (after a short delay), unlike Stage 2.
 
-![PVC pending](../screenshot/stage3-step1-pvc-pending.png)
-![PVC events explain why](../screenshot/stage3-step2-pvc-events.png)
-![Pod, PVC and PV bound](../screenshot/stage3-step3-pod-pvc-pv-bound.png)
-![Volume directory on node](../screenshot/stage3-step4-node-directory.png)
-![Disk not capped at 1Gi](../screenshot/stage3-step5-df-uncapped.png)
-![Resize forbidden](../screenshot/stage3-step6-resize-forbidden.png)
-![Deletion confirmed](../screenshot/stage3-step7-delete-confirmed.png)
+![PVC pending](../evidence/stage3-step1-pvc-pending.png)
+![PVC events explain why](../evidence/stage3-step2-pvc-events.png)
+![Pod, PVC and PV bound](../evidence/stage3-step3-pod-pvc-pv-bound.png)
+![Volume directory on node](../evidence/stage3-step4-node-directory.png)
+![Disk not capped at 1Gi](../evidence/stage3-step5-df-uncapped.png)
+![Resize forbidden](../evidence/stage3-step6-resize-forbidden.png)
+![Deletion confirmed](../evidence/stage3-step7-delete-confirmed.png)
 
 ### Stage 4, Why a Deployment Cannot Own State
 
 A Deployment with 3 replicas sharing one claim, on purpose, to see it fail. All three pods landed on the same node, since the volume only existed there. All three wrote into the same shared log file. Deleted pods came back with brand new random names, no way to say "this is replica 1" consistently.
 
-![All pods on one node](../screenshot/stage4-step1-all-pods-one-node.png)
-![Shared log file](../screenshot/stage4-step2-shared-log.png)
-![New pod names after deletion](../screenshot/stage4-step3-new-pod-names.png)
-![Cleanup confirmed](../screenshot/stage4-step4-cleanup-confirmed.png)
+![All pods on one node](../evidence/stage4-step1-all-pods-one-node.png)
+![Shared log file](../evidence/stage4-step2-shared-log.png)
+![New pod names after deletion](../evidence/stage4-step3-new-pod-names.png)
+![Cleanup confirmed](../evidence/stage4-step4-cleanup-confirmed.png)
 
 ### Stage 5, StatefulSets
 
 A headless Service first, then a StatefulSet called webnote with 3 replicas. Pods came up in strict order, webnote-0 fully ready before webnote-1 started. Each pod got its own claim, so they spread across different nodes freely. DNS lookup for the whole set returned three addresses, one per pod, and I could reach one specific pod by its own name. A note written into webnote-0 did not appear in webnote-1, proving private volumes. Deleting webnote-1 brought back the same name, same claim, same content, only the IP changed.
 
-![Headless Service](../screenshot/stage5-step1-headless-service.png)
-![Ordered creation](../screenshot/stage5-step2-ordered-creation.png)
-![One PVC per ordinal](../screenshot/stage5-step3-pvcs-per-ordinal.png)
-![Pods spread across nodes](../screenshot/stage5-step4-pods-spread.png)
-![nslookup returns all pods](../screenshot/stage5-step5-nslookup-all-pods.png)
-![Fetch from one specific pod](../screenshot/stage5-step6-individual-pod-fetch.png)
-![EndpointSlice](../screenshot/stage5-step7-endpointslice.png)
-![Private volumes proven](../screenshot/stage5-step8-private-volumes.png)
-![Identity survives deletion](../screenshot/stage5-step9-identity-survives.png)
+![Headless Service](../evidence/stage5-step1-headless-service.png)
+![Ordered creation](../evidence/stage5-step2-ordered-creation.png)
+![One PVC per ordinal](../evidence/stage5-step3-pvcs-per-ordinal.png)
+![Pods spread across nodes](../evidence/stage5-step4-pods-spread.png)
+![nslookup returns all pods](../evidence/stage5-step5-nslookup-all-pods.png)
+![Fetch from one specific pod](../evidence/stage5-step6-individual-pod-fetch.png)
+![EndpointSlice](../evidence/stage5-step7-endpointslice.png)
+![Private volumes proven](../evidence/stage5-step8-private-volumes.png)
+![Identity survives deletion](../evidence/stage5-step9-identity-survives.png)
 
 ### Stage 6, Scaling and Updates
 
 Scaling up to 4 created a new claim automatically. Scaling down to 2 killed pods in reverse order and kept all 4 claims, since `whenScaled` is Retain. Scaling back to 3 brought back the same data on the same ordinal. For the rolling update, I had to edit the committed yaml directly. The first attempt did not actually save in VS Code, so `kubectl apply` ran against the old file and nothing changed even though `kubectl rollout status` said complete. I caught this by grepping the file directly. After confirming the save, `partition: 2` updated only webnote-2, leaving 0 and 1 alone. Setting partition back to 0 rolled out the rest in descending order. Deleting the whole StatefulSet kept all claims, and recreating it brought back the old data with original timestamps intact.
 
-![Scale up creates a claim](../screenshot/stage6-step1-scale-up-pvc-count.png)
-![Descending termination order](../screenshot/stage6-step2-descending-termination.png)
-![Claims retained after scale down](../screenshot/stage6-step3-retained-claims.png)
-![Reclaimed volume on scale up](../screenshot/stage6-step4-reclaimed-volume.png)
-![Partitioned update, only one pod](../screenshot/stage6-step5-partition-update.png)
-![Rollout completed](../screenshot/stage6-step6-rollout-complete.png)
-![Volume data unchanged by update](../screenshot/stage6-step6b-volume-unchanged.png)
-![StatefulSet deleted, claims remain](../screenshot/stage6-step7-statefulset-deleted-claims-remain.png)
-![Recreated with data intact](../screenshot/stage6-step8-recreated-with-data.png)
+![Scale up creates a claim](../evidence/stage6-step1-scale-up-pvc-count.png)
+![Descending termination order](../evidence/stage6-step2-descending-termination.png)
+![Claims retained after scale down](../evidence/stage6-step3-retained-claims.png)
+![Reclaimed volume on scale up](../evidence/stage6-step4-reclaimed-volume.png)
+![Partitioned update, only one pod](../evidence/stage6-step5-partition-update.png)
+![Rollout completed](../evidence/stage6-step6-rollout-complete.png)
+![Volume data unchanged by update](../evidence/stage6-step6b-volume-unchanged.png)
+![StatefulSet deleted, claims remain](../evidence/stage6-step7-statefulset-deleted-claims-remain.png)
+![Recreated with data intact](../evidence/stage6-step8-recreated-with-data.png)
 
 ### Stage 7, PostgreSQL
 
 A Secret for the database credentials, decoded in one command, showing a Secret is not encryption. Both a headless Service and a normal ClusterIP Service for postgres. The StatefulSet took about 43 seconds to become fully ready first time, since it had to run initdb. PGDATA was at `/var/lib/postgresql/18/docker`, one level below the mount, a PostgreSQL 18 specific detail. Created a table, inserted 3 rows, then deleted the pod entirely. `SELECT count(*)` still returned 3 afterward, and the log showed initialization was skipped since the data folder was not empty. Both DNS names resolved correctly.
 
-![Secret decoded](../screenshot/stage7-step1-secret-decoded.png)
-![Both Services created](../screenshot/stage7-step2-both-services.png)
-![Postgres running](../screenshot/stage7-step3-postgres-running.png)
-![Log and storage confirmed](../screenshot/stage7-step4-log-and-storage.png)
-![PGDATA location](../screenshot/stage7-step5-pgdata-location.png)
-![Table created and rows inserted](../screenshot/stage7-step6-table-created.png)
-![Rows survived pod deletion](../screenshot/stage7-step7-rows-survived.png)
-![Recovery log](../screenshot/stage7-step8-recovery-log.png)
-![Claim reused and DNS resolves](../screenshot/stage7-step9-claim-and-dns.png)
+![Secret decoded](../evidence/stage7-step1-secret-decoded.png)
+![Both Services created](../evidence/stage7-step2-both-services.png)
+![Postgres running](../evidence/stage7-step3-postgres-running.png)
+![Log and storage confirmed](../evidence/stage7-step4-log-and-storage.png)
+![PGDATA location](../evidence/stage7-step5-pgdata-location.png)
+![Table created and rows inserted](../evidence/stage7-step6-table-created.png)
+![Rows survived pod deletion](../evidence/stage7-step7-rows-survived.png)
+![Recovery log](../evidence/stage7-step8-recovery-log.png)
+![Claim reused and DNS resolves](../evidence/stage7-step9-claim-and-dns.png)
 
 ### Stage 8, Cleanup
 
 Saved the final state and a pg_dump before deleting anything. Deleted all workloads, confirmed 6 claims remained with no pods running. Deleting all claims destroyed the 4 standard class ones completely (after a short delay), but the 2 retain class ones just went to Released, data intact. Deleted the pv-web-static object, postgres data untouched. Deleted the whole cluster, no containers left. The static host folder still had the ledger file, completely untouched, even with the cluster and every dynamic volume gone.
 
-![All pods deleted](../screenshot/stage8-step2-all-pods-deleted.png)
-![Orphaned claims remain](../screenshot/stage8-step3-orphaned-claims.png)
-![Two reclaim policies diverge](../screenshot/stage8-step4-two-classes-diverge.png)
-![Static PV deleted](../screenshot/stage8-step5-static-pv-deleted.png)
-![Cluster deleted](../screenshot/stage8-step6-cluster-deleted.png)
-![Final asymmetry: host data survives, cluster does not](../screenshot/stage8-step7-final-asymmetry.png)
+![All pods deleted](../evidence/stage8-step2-all-pods-deleted.png)
+![Orphaned claims remain](../evidence/stage8-step3-orphaned-claims.png)
+![Two reclaim policies diverge](../evidence/stage8-step4-two-classes-diverge.png)
+![Static PV deleted](../evidence/stage8-step5-static-pv-deleted.png)
+![Cluster deleted](../evidence/stage8-step6-cluster-deleted.png)
+![Final asymmetry: host data survives, cluster does not](../evidence/stage8-step7-final-asymmetry.png)
 
 
 ## 4. Analysis
