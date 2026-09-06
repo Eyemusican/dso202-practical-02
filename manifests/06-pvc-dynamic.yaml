@@ -1,0 +1,30 @@
+# =============================================================================
+# File        : manifests/06-pvc-dynamic.yaml
+# Practical   : DSO202 Practical 2
+# Purpose     : Request storage with no PersistentVolume created by hand. The
+#               'standard' StorageClass's provisioner creates one automatically.
+# Apply with  : kubectl apply -f manifests/06-pvc-dynamic.yaml
+# Inspect     : kubectl get pvc pvc-dynamic-demo
+# =============================================================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dynamic-data
+  namespace: dso202-practical-02
+  labels:
+    app: dynamic-writer
+    tier: storage-demo
+    dso202/practical: "02"
+    dso202/managed-by: declarative
+spec:
+  accessModes:
+    - ReadWriteOnce
+
+  # Naming the class explicitly here, even though it is also the cluster
+  # default, so that the manifest is correct regardless of what another
+  # administrator later sets as default.
+  storageClassName: standard
+
+  resources:
+    requests:
+      storage: 1Gi

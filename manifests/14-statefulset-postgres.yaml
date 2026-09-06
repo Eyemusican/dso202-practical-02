@@ -1,0 +1,106 @@
+# =============================================================================
+# File        : manifests/14-statefulset-postgres.yaml
+# Practical   : DSO202 Practical 2
+# Purpose     : A real stateful application on retained storage. One replica,
+#               because a second replica of this manifest would be a second
+#               independent database and not a copy of the first. Replication
+#               is a property of the application and is the work of an Operator
+#               (Unit II 2.4).
+# Apply with  : kubectl apply -f manifests/14-statefulset-postgres.yaml
+# Connect     : kubectl exec -it postgres-0 -- psql -U taskuser -d tasktracker
+# =============================================================================
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: dso202-practical-02
+  labels:
+    app: postgres
+    tier: database
+    dso202/practical: "02"
+    dso202/managed-by: declarative
+spec:
+  serviceName: postgres-headless
+  replicas: 1
+  podManagementPolicy: OrderedReady
+
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      partition: 0
+
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+
+  selector:
+    matchLabels:
+      app: postgres
+
+  template:
+    metadata:
+      labels:
+        app: postgres
+        tier: database
+        dso202/practical: "02"
+        dso202/managed-by: declarative
+    spec:
+      terminationGracePeriodSeconds: 60
+
+      containers:
+        - name: postgres
+          image: postgres:18-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: postgres
+              containerPort: 5432
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: postgres-credentials
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - pg_isready -h 127.0.0.1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 6
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - pg_isready -h 127.0.0.1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          app: postgres
+          tier: database
+          dso202/practical: "02"
+          dso202/managed-by: declarative
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: dso202-retain
+        resources:
+          requests:
+            storage: 2Gi

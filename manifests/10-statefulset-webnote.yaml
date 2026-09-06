@@ -1,0 +1,131 @@
+# =============================================================================
+# File        : manifests/10-statefulset-webnote.yaml
+# Practical   : DSO202 Practical 2
+# Purpose     : Three web servers, each serving a page stored on its own
+#               volume. The page records when the volume was first written and
+#               every subsequent start, so that identity and persistence can be
+#               read straight out of an HTTP response.
+# Apply with  : kubectl apply -f manifests/10-statefulset-webnote.yaml
+# Edited in   : Stage 6 of the guide - partition, then the image tag
+# =============================================================================
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: webnote
+  namespace: dso202-practical-02
+  labels:
+    app: webnote
+    tier: frontend
+    dso202/practical: "02"
+    dso202/managed-by: declarative
+spec:
+  serviceName: webnote
+  replicas: 3
+  podManagementPolicy: OrderedReady
+  minReadySeconds: 5
+  revisionHistoryLimit: 5
+
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      partition: 0
+
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+
+  selector:
+    matchLabels:
+      app: webnote
+
+  template:
+    metadata:
+      labels:
+        app: webnote
+        tier: frontend
+        dso202/practical: "02"
+        dso202/managed-by: declarative
+    spec:
+      terminationGracePeriodSeconds: 10
+
+      initContainers:
+        - name: seed-content
+          image: busybox:1.37
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -eu
+              if [ ! -f /data/index.html ]; then
+                echo "<h2>${POD_NAME}</h2>" > /data/index.html
+                echo "created: $(date -u +%Y-%m-%dT%H:%M:%SZ) on ${NODE_NAME}" >> /data/index.html
+              fi
+              echo "started: $(date -u +%Y-%m-%dT%H:%M:%SZ) on ${NODE_NAME}" >> /data/index.html
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: content
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+
+      containers:
+        - name: nginx
+          image: nginx:1.31-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          volumeMounts:
+            - name: content
+              mountPath: /usr/share/nginx/html
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 64Mi
+
+  volumeClaimTemplates:
+    - metadata:
+        name: content
+        labels:
+          app: webnote
+          tier: frontend
+          dso202/practical: "02"
+          dso202/managed-by: declarative
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: standard
+        resources:
+          requests:
+            storage: 1Gi

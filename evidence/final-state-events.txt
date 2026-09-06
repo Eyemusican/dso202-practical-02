@@ -1,0 +1,77 @@
+LAST SEEN   TYPE      REASON                  OBJECT                                  MESSAGE
+21m         Normal    Scheduled               pod/postgres-0                          Successfully assigned dso202-practical-02/postgres-0 to worker-node-1
+46m         Normal    Scheduled               pod/webnote-0                           Successfully assigned dso202-practical-02/webnote-0 to worker-node-2
+50m         Normal    Scheduled               pod/webnote-1                           Successfully assigned dso202-practical-02/webnote-1 to worker-node-1
+46m         Normal    Scheduled               pod/webnote-1                           Successfully assigned dso202-practical-02/webnote-1 to worker-node-1
+25m         Normal    Scheduled               pod/postgres-0                          Successfully assigned dso202-practical-02/postgres-0 to worker-node-1
+50m         Normal    Scheduled               pod/webnote-0                           Successfully assigned dso202-practical-02/webnote-0 to worker-node-2
+46m         Normal    Scheduled               pod/webnote-2                           Successfully assigned dso202-practical-02/webnote-2 to worker-node-2
+54m         Normal    Scheduled               pod/webnote-2                           Successfully assigned dso202-practical-02/webnote-2 to worker-node-2
+54m         Normal    Killing                 pod/webnote-2                           Stopping container nginx
+54m         Warning   Unhealthy               pod/webnote-2                           Readiness probe failed: Get "http://10.244.1.5:80/": dial tcp 10.244.1.5:80: connect: connection refused
+54m         Normal    SuccessfulDelete        statefulset/webnote                     Delete Pod webnote-2 in StatefulSet webnote successful
+54m         Normal    SuccessfulCreate        statefulset/webnote                     Create Pod webnote-2 in StatefulSet webnote successful
+54m         Normal    Created                 pod/webnote-2                           Container created
+54m         Normal    Pulled                  pod/webnote-2                           Container image "busybox:1.37" already present on machine and can be accessed by the pod
+54m         Normal    Started                 pod/webnote-2                           Container started
+54m         Normal    Pulling                 pod/webnote-2                           Pulling image "nginx:1.31-alpine"
+54m         Normal    Created                 pod/webnote-2                           Container created
+54m         Normal    Started                 pod/webnote-2                           Container started
+54m         Normal    Pulled                  pod/webnote-2                           Successfully pulled image "nginx:1.31-alpine" in 17.457s (17.457s including waiting). Image size: 28791510 bytes.
+50m         Normal    Killing                 pod/webnote-1                           Stopping container nginx
+50m         Normal    SuccessfulDelete        statefulset/webnote                     Delete Pod webnote-1 in StatefulSet webnote successful
+50m         Normal    SuccessfulCreate        statefulset/webnote                     Create Pod webnote-1 in StatefulSet webnote successful
+50m         Normal    Created                 pod/webnote-1                           Container created
+50m         Normal    Pulled                  pod/webnote-1                           Container image "busybox:1.37" already present on machine and can be accessed by the pod
+50m         Normal    Pulling                 pod/webnote-1                           Pulling image "nginx:1.31-alpine"
+50m         Normal    Started                 pod/webnote-1                           Container started
+50m         Normal    Pulled                  pod/webnote-1                           Successfully pulled image "nginx:1.31-alpine" in 10.053s (10.053s including waiting). Image size: 28791510 bytes.
+50m         Normal    Created                 pod/webnote-1                           Container created
+50m         Normal    Started                 pod/webnote-1                           Container started
+50m         Normal    SuccessfulDelete        statefulset/webnote                     Delete Pod webnote-0 in StatefulSet webnote successful
+50m         Normal    Killing                 pod/webnote-0                           Stopping container nginx
+50m         Normal    SuccessfulCreate        statefulset/webnote                     Create Pod webnote-0 in StatefulSet webnote successful
+50m         Normal    Pulled                  pod/webnote-0                           Container image "busybox:1.37" already present on machine and can be accessed by the pod
+50m         Normal    Created                 pod/webnote-0                           Container created
+50m         Normal    Created                 pod/webnote-0                           Container created
+50m         Normal    Pulled                  pod/webnote-0                           Container image "nginx:1.31-alpine" already present on machine and can be accessed by the pod
+50m         Normal    Started                 pod/webnote-0                           Container started
+50m         Normal    Started                 pod/webnote-0                           Container started
+47m         Normal    Killing                 pod/webnote-1                           Stopping container nginx
+47m         Normal    Killing                 pod/webnote-0                           Stopping container nginx
+47m         Normal    Killing                 pod/webnote-2                           Stopping container nginx
+46m         Normal    SuccessfulCreate        statefulset/webnote                     Create Pod webnote-0 in StatefulSet webnote successful
+46m         Normal    Pulled                  pod/webnote-0                           Container image "busybox:1.37" already present on machine and can be accessed by the pod
+46m         Normal    Created                 pod/webnote-0                           Container created
+46m         Normal    Started                 pod/webnote-0                           Container started
+46m         Normal    Pulled                  pod/webnote-0                           Container image "nginx:1.31-alpine" already present on machine and can be accessed by the pod
+46m         Normal    Created                 pod/webnote-0                           Container created
+46m         Normal    Started                 pod/webnote-0                           Container started
+46m         Normal    SuccessfulCreate        statefulset/webnote                     Create Pod webnote-1 in StatefulSet webnote successful
+46m         Normal    Created                 pod/webnote-1                           Container created
+46m         Normal    Pulled                  pod/webnote-1                           Container image "busybox:1.37" already present on machine and can be accessed by the pod
+46m         Normal    Started                 pod/webnote-1                           Container started
+46m         Normal    Started                 pod/webnote-1                           Container started
+46m         Normal    Created                 pod/webnote-1                           Container created
+46m         Normal    Pulled                  pod/webnote-1                           Container image "nginx:1.31-alpine" already present on machine and can be accessed by the pod
+46m         Normal    SuccessfulCreate        statefulset/webnote                     Create Pod webnote-2 in StatefulSet webnote successful
+46m         Normal    Created                 pod/webnote-2                           Container created
+46m         Normal    Pulled                  pod/webnote-2                           Container image "busybox:1.37" already present on machine and can be accessed by the pod
+46m         Normal    Started                 pod/webnote-2                           Container started
+46m         Normal    Started                 pod/webnote-2                           Container started
+46m         Normal    Pulled                  pod/webnote-2                           Container image "nginx:1.31-alpine" already present on machine and can be accessed by the pod
+46m         Normal    Created                 pod/webnote-2                           Container created
+25m         Normal    WaitForFirstConsumer    persistentvolumeclaim/data-postgres-0   waiting for first consumer to be created before binding
+25m         Normal    ExternalProvisioning    persistentvolumeclaim/data-postgres-0   Waiting for a volume to be created either by the external provisioner 'rancher.io/local-path' or manually by the system administrator. If volume creation is delayed, please verify that the provisioner is running and correctly registered.
+25m         Normal    Provisioning            persistentvolumeclaim/data-postgres-0   External provisioner is provisioning volume for claim "dso202-practical-02/data-postgres-0"
+25m         Normal    SuccessfulCreate        statefulset/postgres                    Create Claim data-postgres-0 Pod postgres-0 in StatefulSet postgres success
+25m         Normal    ProvisioningSucceeded   persistentvolumeclaim/data-postgres-0   Successfully provisioned volume pvc-53256619-ba57-4a17-adc9-81cb3756a88d
+25m         Normal    Pulling                 pod/postgres-0                          Pulling image "postgres:18-alpine"
+24m         Normal    Created                 pod/postgres-0                          Container created
+24m         Normal    Started                 pod/postgres-0                          Container started
+24m         Normal    Pulled                  pod/postgres-0                          Successfully pulled image "postgres:18-alpine" in 28.911s (28.911s including waiting). Image size: 120060019 bytes.
+21m         Normal    Killing                 pod/postgres-0                          Stopping container postgres
+21m         Normal    SuccessfulCreate        statefulset/postgres                    Create Pod postgres-0 in StatefulSet postgres successful
+21m         Normal    Pulled                  pod/postgres-0                          Container image "postgres:18-alpine" already present on machine and can be accessed by the pod
+21m         Normal    Started                 pod/postgres-0                          Container started
+21m         Normal    Created                 pod/postgres-0                          Container created
